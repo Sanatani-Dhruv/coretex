@@ -1,6 +1,6 @@
 <?php
 
-namespace Bundle\Environment;
+namespace Dhruv125\Coretex\Environment;
 
 class Environment {
   # Set Environmental variables

@@ -1,6 +1,6 @@
 <?php
 
-namespace Coretex\Exceptions;
+namespace Dhruv125\Coretex\Exceptions;
 
 class InternalErrorException extends \Exception {
     public function __construct($message, $code = 0, ?Throwable $previous = null) {

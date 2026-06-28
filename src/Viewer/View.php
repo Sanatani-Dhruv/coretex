@@ -1,8 +1,8 @@
 <?php
-namespace Coretex\Viewer;
+namespace Dhruv125\Coretex\Viewer;
 
-use Coretex\Router\Route;
-use Coretex\Exceptions\ViewNotFoundException;
+use Dhruv125\Coretex\Router\Route;
+use Dhruv125\Coretex\Exceptions\ViewNotFoundException;
 
 /*! This Class handles calling views, should not be modified, unless you know what you do.*/
 class View {

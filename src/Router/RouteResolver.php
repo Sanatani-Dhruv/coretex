@@ -1,9 +1,9 @@
 <?php
 
-namespace Coretex\Router;
+namespace Dhruv125\Coretex\Router;
 
-use Coretex\Viewer\View;
-use Coretex\Exceptions\InternalErrorException;
+use Dhruv125\Coretex\Viewer\View;
+use Dhruv125\Coretex\Exceptions\InternalErrorException;
 
 class RouteResolver {
 

@@ -1,8 +1,8 @@
 <?php
-namespace Coretex\Router;
+namespace Dhruv125\Coretex\Router;
 
-use Coretex\Exceptions\PageNotFoundException;
-use Coretex\Router\RouteResolver;
+use Dhruv125\Coretex\Exceptions\PageNotFoundException;
+use Dhruv125\Coretex\Router\RouteResolver;
 
 class Route {
 	private array $requests;

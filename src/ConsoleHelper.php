@@ -1,5 +1,5 @@
 <?php
-namespace Coretex;
+namespace Dhruv125\Coretex;
 
 class ConsoleHelper {
     /*

@@ -1,6 +1,6 @@
 <?php
 
-namespace Bundle\Handler;
+namespace Dhruv125\Coretex\Handler;
 
 class GlobalErrorHandler {
 	private string $systemCompDir;
@@ -130,7 +130,7 @@ class GlobalErrorHandler {
 			}
 			$outputArr .= "</pre>";
 		} else {
-			throw new ErrorException("File $errFile not found");
+			throw new \ErrorException("File $errFile not found");
 		}
 		return $outputArr;
 	}

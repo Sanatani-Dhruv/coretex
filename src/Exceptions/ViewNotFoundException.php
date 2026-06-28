@@ -1,6 +1,6 @@
 <?php
 
-namespace Coretex\Exceptions;
+namespace Dhruv125\Coretex\Exceptions;
 
 class ViewNotFoundException extends \Exception {
     public $viewName;

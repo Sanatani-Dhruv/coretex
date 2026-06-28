@@ -1,6 +1,6 @@
 <?php
 
-namespace Coretex\Support;
+namespace Dhruv125\Coretex\Support;
 
 class Request {
     private array $gets;
