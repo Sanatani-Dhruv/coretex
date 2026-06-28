@@ -1,5 +1,7 @@
 <?php
 
+namespace Dhruv125\Coretex\Templater;
+
 class Template {
 	private array $filePathArr;
 	private $storagePath;
