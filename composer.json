@@ -1,0 +1,18 @@
+{
+    "name": "dhruv125/coretex",
+    "description": "Only core package you need to get started with ownwork framework.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Dhruv125\\Coretex\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "dhruv125"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}
