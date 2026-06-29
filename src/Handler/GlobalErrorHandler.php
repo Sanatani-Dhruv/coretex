@@ -17,7 +17,7 @@ class GlobalErrorHandler {
 		\comp($compName, $parameters, $this->systemCompDir);
 	}
 
-	public function HandleError ($Code, $Message, $File = null, $Line = 0, $Context = []) {
+	public function HandleError($Code, $Message, $File = null, $Line = 0, $Context = []) {
 		// echo "Working Error";
 		error_reporting(E_ALL ^ E_DEPRECATED);
 		if (isset($_ENV['DEV_ENV']) && $_ENV['DEV_ENV']) {
