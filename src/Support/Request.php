@@ -104,15 +104,31 @@ class Request {
         return headers_list();
     }
 
-    public function get(string $name, int | bool $raw = false) {
-        if (isset($_GET[$name]) && $_GET[$name]) {
-            $data = trim($_GET[$name]);
-            if (!$raw) {
-                $data = htmlspecialchars($data);
+    public function get(array | string $name, int | bool $raw = false) {
+        if (is_string($name)) {
+            if (isset($_GET[$name]) && $_GET[$name]) {
+                $data = trim($_GET[$name]);
+                if (!$raw) {
+                    $data = htmlspecialchars($data);
+                }
+                return $data;
+            } else {
+                return null;
             }
-            return $data;
         } else {
-            return null;
+            $resultArr = [];
+            foreach($name as $value) {
+                if (isset($_GET[$value]) && $_GET[$value]) {
+                    $data = trim($_GET[$value]);
+                    if (!$raw) {
+                        $data = htmlspecialchars($data);
+                    }
+                    $resultArr[] = $data;
+                } else {
+                    return null;
+                }
+            }
+            return count($resultArr) ? $resultArr : null;
         }
     }
 
@@ -120,15 +136,31 @@ class Request {
         return $this->get($name, true);
     }
 
-    public function post(string $name, int | bool $raw = false) {
-        if (isset($_POST[$name]) && $_POST[$name]) {
-            $data = trim($_POST[$name]);
-            if (!$raw) {
-                $data = htmlspecialchars($data);
+    public function post(string | array $name, int | bool $raw = false) {
+        if (is_string($name)) {
+            if (isset($_POST[$name]) && $_POST[$name]) {
+                $data = trim($_POST[$name]);
+                if (!$raw) {
+                    $data = htmlspecialchars($data);
+                }
+                return $data;
+            } else {
+                return null;
             }
-            return $data;
         } else {
-            return null;
+            $resultArr = [];
+            foreach($name as $value) {
+                if (isset($_POST[$value]) && $_POST[$value]) {
+                    $data = trim($_POST[$value]);
+                    if (!$raw) {
+                        $data = htmlspecialchars($data);
+                    }
+                    $resultArr[] = $data;
+                } else {
+                    return null;
+                }
+            }
+            return count($resultArr) ? $resultArr : null;
         }
     }
 
