@@ -30,7 +30,7 @@ class Pager {
 
     public function viewNotFoundPage(string $viewName, string $message = "", array $moreVariables = []) {
         $error_title = $message;
-        $error_message = ($message === "" ? "View with name $viewName not found": $message);
+        $error_message = ($message === "" ? "View with name '$viewName' not found": $message);
         if(count($moreVariables)) {
             if (array_is_list($moreVariables)) {
                 throw new InternalErrorException("Expecting Associative array for variable '\$moreVariables', recieved list");
