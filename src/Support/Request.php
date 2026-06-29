@@ -123,7 +123,7 @@ class Request {
                     if (!$raw) {
                         $data = htmlspecialchars($data);
                     }
-                    $resultArr[] = $data;
+                    $resultArr[$value] = $data;
                 } else {
                     return null;
                 }
@@ -155,7 +155,7 @@ class Request {
                     if (!$raw) {
                         $data = htmlspecialchars($data);
                     }
-                    $resultArr[] = $data;
+                    $resultArr[$value] = $data;
                 } else {
                     return null;
                 }
