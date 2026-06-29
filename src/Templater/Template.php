@@ -52,7 +52,7 @@ class Template {
 		$final = str_replace("):", "):?>", $final);
 
 		/* Component Calling Directive */
-		$final = str_replace([ "@comp(", "@comp (" ], "<?php comp( ?>", $final);
+		$final = str_replace([ "@comp(", "@comp (" ], "<?php comp(", $final);
 
 		/* If Block */
 		$final = str_replace([ "@if(", "@if (" ], "<?php if(", $final);
