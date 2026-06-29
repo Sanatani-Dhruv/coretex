@@ -30,7 +30,7 @@ class RouteResolver {
 				$handler();
 			}
 		} elseif (is_string($handler)) {
-			view($handler);
+			View::instantView($handler, $dynamicVariables);
 		} elseif (is_array($handler)) {
 			try {
 				$paraCount = count($handler);
