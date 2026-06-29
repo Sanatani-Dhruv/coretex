@@ -125,7 +125,7 @@ class Request {
                     }
                     $resultArr[$value] = $data;
                 } else {
-                    return null;
+                    $resultArr[$value] = null;
                 }
             }
             return count($resultArr) ? $resultArr : null;
@@ -157,7 +157,7 @@ class Request {
                     }
                     $resultArr[$value] = $data;
                 } else {
-                    return null;
+                    $resultArr[$value] = null;
                 }
             }
             return count($resultArr) ? $resultArr : null;
