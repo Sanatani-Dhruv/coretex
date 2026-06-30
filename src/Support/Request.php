@@ -70,7 +70,11 @@ class Request {
             $value = filter_input(\INPUT_COOKIE, $var_name, $type);
             break;
         case 'session':
-            $value = filter_input(\INPUT_SESSION, $var_name, $type);
+            // $value = filter_input(\INPUT_SESSION, $var_name, $type);
+            if (isset($_SESSION[$var_name])) {
+                $value = $_SESSION[$var_name];
+                $value = filter_var($value, $type);
+            }
             break;
         case 'server':
             $value = filter_input(\INPUT_SERVER, $var_name, $type);
