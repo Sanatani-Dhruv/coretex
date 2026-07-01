@@ -10,126 +10,176 @@ class Request {
     private array $files;
     private array $requests;
     private array $cookies;
+    private array $server;
 
     public function __construct() {
-        $this->posts = &$_POST;
-        $this->gets = &$_GET;
-        $this->requests = &$_REQUEST;
-        $this->files = &$_FILES;
-        $this->cookies = &$_COOKIE;
+        $this->posts = $_POST;
+        $this->gets = $_GET;
+        $this->requests = $_REQUEST;
+        $this->files = $_FILES;
+        $this->cookies = $_COOKIE;
+        $this->server = $_SERVER;
     }
 
-    public function allGet() {
+    public function allGet() : array {
         return $this->gets;
     }
 
-    public function allPost() {
+    public function allPost() : array {
         return $this->posts;
     }
 
-    public function allCookie() {
+    public function allCookie() : array {
         return $this->cookies;
     }
 
-    public function allFile() {
+    public function allFile() : array {
         return $this->files;
     }
 
-    public function all() {
-        return [ ...$this->requests, ...$this->cookies, ...$this->files ];
+    public function allServer() : array {
+        return $this->server;
+    }
+
+    public function all() : array {
+        return [
+            'requests' => $this->requests,
+            'cookies' => $this->cookies,
+            'files' => $this->files,
+            'gets' => $this->gets,
+            'posts' => $this->posts,
+            'server' => $this->server,
+        ];
     }
 
     public function method(): string {
-        return $_SERVER['REQUEST_METHOD'] ?? "GET";
+        return strtoupper($this->server['REQUEST_METHOD'] ?? 'GET');
     }
 
     public function file(string | array $name) {
         if (is_string($name)) {
-            if (isset($_FILES[$name])) {
-                return $_FILES[$name];
+            if (isset($this->files[$name])) {
+                return $this->files[$name];
             } else {
                 return null;
             }
         } else {
             $fileArr = [];
             foreach($name as $file) {
-                $fileArr[$file] = $_FILES[$file] ?? null;
+                $fileArr[$file] = $this->files[$file] ?? null;
             }
             return $fileArr;
         }
     }
 
-    public function exists(string $name, bool $noValue = false) {
-        if (isset($_REQUEST[$name]) && $_REQUEST[$name] !== null) {
-            $var = $_REQUEST[$name];
-            if(is_string($var)) {
-                $var = trim($var);
-                if ($noValue && $var === "") {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
+    public function has(string $key) : bool {
+        return isset($this->requests[$key]);
     }
 
-    public function input(string $method, string $var_name, int $type = FILTER_DEFAULT) : string | array | null {
-        $value = null;
-        switch (strtolower($method)) {
-        case 'cookie':
-            $value = filter_input(\INPUT_COOKIE, $var_name, $type);
-            break;
-        case 'session':
-            // $value = filter_input(\INPUT_SESSION, $var_name, $type);
-            if (isset($_SESSION[$var_name])) {
-                $value = $_SESSION[$var_name];
-                $value = filter_var($value, $type);
+    public function missing(string $key) : bool {
+        return !$this->has($key);
+    }
+
+    public function recursiveMap(array $array, callable $callback) : array {
+        $resultArr = [];
+        foreach($array as $key => $value) {
+            if (is_array($value)) {
+                $resultArr[$key] = $this->recursiveMap($value, $callback);
+                continue;
             }
-            break;
-        case 'server':
-            $value = filter_input(\INPUT_SERVER, $var_name, $type);
-            break;
-        case 'request':
-            $value = filter_input(\INPUT_POST, $var_name, $type);
-            if ($value == null)
-                $value = filter_input(\INPUT_GET, $var_name, $type);
-            break;
-        case 'post':
-            $value = filter_input(\INPUT_POST, $var_name, $type);
-            break;
-        case 'get':
-        default:
-        $value = filter_input(\INPUT_GET, $var_name, $type);
-        break;
+            $resultArr[$key] = $callback($value);
+        }
+        return $resultArr;
+    }
+
+    public function filled(string $key) : bool {
+        $has = $this->has($key);
+        if (!$has) {
+            return false;
         }
 
-        if (is_string($value) && $value !== "") {
-            $value = trim($value);
+        $value = $this->requests[$key] ?? null;
+        if ($value === null) {
+            return false;
         }
-        if ($value === false) {
-            $value = null;
+
+        if (is_string($value)) {
+            return trim($value) !== "";
         }
-        return $value;
+
+        if (is_array($value)) {
+            return count($value) > 0;
+        }
+
+        return true;
+    }
+
+    public function input(string $source, string $key) : mixed {
+        $source = strtolower($source);
+
+        $data = match($source) {
+            'get' => $this->gets[$key] ?? null,
+            'post' => $this->posts[$key] ?? null,
+            'cookie' => $this->cookies[$key] ?? null,
+            'request' => $this->requests[$key] ?? null,
+            'server' => $this->server[$key] ?? null,
+            default => throw new InternalErrorException("Unsupported source '$source' provided!"),
+        };
+
+        if (is_string($data) && $source !== 'server') {
+            $data = trim($data);
+        }
+
+        if (is_array($data)) {
+            $data = array_map(fn($value) => is_string($value) ? trim($value) : $value, $data);
+        }
+
+        return $data;
+    }
+
+    private function trim(mixed $string, string $character_mask) {
+        if (is_string($string)) {
+            return trim($string, $character_mask);
+        }
+        return $string;
     }
 
     public function getHeaders(): array {
-        return getallheaders();
+        if (function_exists('getallheaders')) {
+            return getallheaders();
+        }
+
+        $headers = [];
+        foreach($this->server as $key => $value) {
+            if (str_starts_with($key, "HTTP_")) {
+                $header = str_replace('_', '-', substr($key, 5));
+            } elseif(in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH', 'CONTENT_MD5'], true)) {
+                $header = str_replace('_', '-', $key);
+            } else {
+                continue;
+            }
+
+            $header = ucwords(strtolower($header), '-');
+
+            /* HTTP_USER_AGENT => USER-AGENT */
+            $headers[$header] = $value;
+        }
+        return $headers;
     }
 
-    private function fetch(array | string $name,string $method) {
+    private function fetch(array | string $name, string $method) : mixed {
         $method = strtolower($method);
-        if ($method === "get") {
-            $DATA = $_GET;
-        } elseif ($method === "post") {
-            $DATA = $_POST;
-        }
+        $_DATA = match($method) {
+            'get' => $this->gets,
+            'post' => $this->posts,
+            'cookie' => $this->cookies,
+            default => throw new InternalErrorException("Unsupported method '$method' provided!"),
+        };
         if (is_string($name)) {
-            if (isset($DATA[$name]) && $DATA[$name] !== null) {
-                if (is_string($DATA[$name])) {
-                    $data = trim($DATA[$name]);
-                }
-                if($data === "") {
-                    return null;
+            if (isset($_DATA[$name]) && $_DATA[$name] !== null) {
+                $data = $_DATA[$name];
+                if (is_string($data)) {
+                    $data = trim($data);
                 }
                 return $data;
             } else {
@@ -138,17 +188,18 @@ class Request {
         } else {
             $resultArr = [];
             foreach($name as $value) {
-                if (isset($DATA[$value]) && $DATA[$value] !== null) {
-                    if (is_string($DATA[$value])) {
-                        $data = trim($DATA[$value]);
-                    }
-                    if($data === "") {
-                        $resultArr[$value] = null;
-                    }
-                    $resultArr[$value] = $data;
-                } else {
+                if (!isset($_DATA[$value]) || $_DATA[$value] === null) {
                     $resultArr[$value] = null;
+                    continue;
                 }
+                $data = $_DATA[$value];
+                if (is_string($data)) {
+                    $data = trim($data);
+                }
+                if (is_array($data)) {
+                    $data = array_map(fn($value) => is_string($value) ? trim($value) : $value, $data);
+                }
+                $resultArr[$value] = $data;
             }
             return count($resultArr) ? $resultArr : null;
         }
@@ -156,11 +207,11 @@ class Request {
 
     }
 
-    public function get(array | string $name) {
-        return $this->fetch($name, "get");
+    public function get(array | string $name) : mixed {
+        return $this->fetch($name, 'get');
     }
 
-    public function post(string | array $name) {
-        return $this->fetch($name, "post");
+    public function post(string | array $name) : mixed {
+        return $this->fetch($name, 'post');
     }
 }
