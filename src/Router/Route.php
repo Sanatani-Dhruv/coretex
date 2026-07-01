@@ -4,10 +4,15 @@ namespace Dhruv125\Coretex\Router;
 use Dhruv125\Coretex\Exceptions\PageNotFoundException;
 use Dhruv125\Coretex\Router\RouteResolver;
 
+use Dhruv125\Coretex\Support\Request;
+use Dhruv125\Coretex\Support\Response;
+
 class Route {
 	private array $requests;
 	private bool $matchFound;
 	private RouteResolver $resolver;
+	private Request $request;
+	public string $currentUrl;
 
 	public function __construct() {
 		// echo "--- Made Router ---<br>";
@@ -15,103 +20,130 @@ class Route {
 		$this->requests = [];
 		$this->resolver = new RouteResolver();
 		$this->matchFound = false;
+		$this->request = new Request();
+		$this->currentUrl = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+	}
+
+	private function matchRoute(string $url): array {
+		$result = [
+			'matched' => false,
+			'params' => [],
+		];
+		// echo "===================<br>";
+
+		$regex = '/{([\w\/]*)}/m';
+		$replaceRegex = '([\\w]{1,})';
+		$dynamicVar = [];
+		if (!str_contains($url, '{')) {
+			if ($this->currentUrl === $url) {
+				$result['matched'] = true;
+				return $result;
+			}
+		}
+
+		preg_match_all($regex, $url, $dynamicVar);
+		array_shift($dynamicVar);
+		$dynamicVar = $dynamicVar[0] ?? null;
+
+		$requestRegex = preg_replace($regex, $replaceRegex, $url);
+		$requestRegex = str_replace('/', '\/', $requestRegex);
+		$requestRegex = '/^' . $requestRegex . '$/';
+
+		if (preg_match($requestRegex, $this->currentUrl)) {
+			$result['matched'] = true;
+			preg_match_all($requestRegex, $this->currentUrl, $variableValues);
+			array_shift($variableValues);
+
+			$i = 0;
+			foreach($dynamicVar as $key) {
+				$keyPair[$key] = $variableValues[$i++][0];
+			}
+			$result['params'] = $keyPair;
+		}
+
+		return $result;
+	}
+
+	private function runMiddleware(string $currentTempUrl, string | array | callable $finalHandler, array $keyPair = []) {
+		$middlewares = $this->requests[$this->request->method()][$currentTempUrl]['middlewares'];
+		$payload = [];
+		foreach($middlewares as $middleware) {
+			$payload[] = $middleware($keyPair);
+		}
+		pre($payload);
 	}
 
 	public function get(string $url, callable | array | string $handler) {
-		$this->requests['GET'][$url] = $handler;
+		$this->requests['GET'][$url] = [
+			'handler' => $handler,
+			'middlewares' => []
+		];
 		return $this->requests['GET'];
 	}
 
+	public function middleware(string $method, string $url, callable $handler) {
+		$method = strtoupper($method);
+		$this->requests[$method][$url]['middlewares'][] = $handler;
+		// $this->parse_url_temp($url);
+	}
+
 	public function post(string $url, callable | array | string $handler) {
-		$this->requests['POST'][$url] = $handler;
+		$this->requests['POST'][$url] = [
+			'handler' => $handler,
+			'middlewares' => []
+		];
 		return $this->requests['POST'];
 	}
 
 	public function put(string $url, callable | array | string $handler) {
-		$this->requests['PUT'][$url] = $handler;
+		$this->requests['PUT'][$url] = [
+			'handler' => $handler,
+			'middlewares' => []
+		];
 		return $this->requests['PUT'];
 	}
 
 	public function delete(string $url, callable | array | string $handler) {
+		$this->requests['DELETE'][$url] = [
+			'handler' => $handler,
+			'middlewares' => []
+		];
 		return $this->requests['DELETE'];
 	}
 
 	public function patch(string $url, callable | array | string $handler) {
-		return $this->requests['DELETE'];
-	}
-
-	public function middleware(array $mapping = [], callable $handler = null): bool | int {
-		pre($mapping);
-		return 0;
+		$this->requests['PATCH'][$url] = [
+			'handler' => $handler,
+			'middlewares' => []
+		];
+		return $this->requests['PATCH'];
 	}
 
 	public function end() {
-		// pre($this->requests);
-		$regex = '/{([\w\/]*)}/m';
-		$replaceRegex = '([\\w]{1,})';
-		$currentUrl = parse_url($_SERVER['REQUEST_URI']);
-		if (array_key_exists('path', $currentUrl)) {
-			$currentUrl = $currentUrl['path'];
+
+		foreach($this->requests[$_SERVER['REQUEST_METHOD']] as $request => $content) {
+			$result = $this->matchRoute($request);
+			if ($result['matched']) {
+				break;
+			}
 		}
 
-		// echo "Current Url: $currentUrl<br>";
-		$variableArray;
-		foreach($this->requests[$_SERVER['REQUEST_METHOD']] as $request => $handler) {
-			// echo "Request: ' $request '<br><br>";
-			if ($this->matchFound) break;
-			$normalMatch = true;
-			if (str_contains($request, '}')) {
-				$normalMatch = false;
-				preg_match_all($regex, $request, $dynamicVar);
-				array_shift($dynamicVar);
-				$dynamicVar = $dynamicVar[0];
-				// pre($dynamicVar);
-				$requestRegex = preg_replace($regex, $replaceRegex, $request);
-				$requestRegex = str_replace('/', '\/', $requestRegex);
-				$requestRegex = '/^' . $requestRegex . '$/';
-
-				// echo "Match Against This Regex: `$requestRegex`<br>";
-			}
-			if (!$normalMatch) {
-				if (preg_match($requestRegex, $currentUrl)) {
-					preg_match_all($requestRegex, $currentUrl, $variableValues);
-					array_shift($variableValues);
-					// pre($variableValues);
-
-					$i = 0;
-					$keyPair = [];
-					foreach($dynamicVar as $key) {
-						$keyPair[$key] = $variableValues[$i][0];
-						$i++;
-					}
-					// pre($keyPair);
-					// echo "Current Page: '$request'<br>";
-					$this->matchFound = true;
-					break;
-				}
-			} else {
-				if ($currentUrl === $request) {
-					$this->matchFound = true;
-					break;
-				}
-			}
-
-			// echo "Handler: ";
-			// pre($handler);
-			// echo "===========<br>";
-			// echo "===========<br>";
-		}
-
-		if ($this->matchFound) {
-			// echo "Matched Url: $currentUrl<br>";
+		if ($result['matched']) {
+			// echo "Matched Url: $this->currentUrl<br>";
 			if (!isset($keyPair)) {
 				$keyPair = [];
 			}
 			// pre($keyPair);
-			$this->resolver->resolve($currentUrl, $handler, $keyPair);
-		} else {
-			throw new PageNotFoundException("404 Page Not Found");
+
+			return [
+				'middlewares' => $content['middlewares'],
+				'handler' => $content['handler'],
+				'params' => $result['params']
+			];
+			// $this->resolver->resolve($currentUrl, $handler, $keyPair);
 		}
+		return $result;
+
 	}
 
 }
