@@ -2,6 +2,8 @@
 
 namespace Dhruv125\Coretex\Support;
 
+use Dhruv125\Coretex\Exceptions\InternalErrorException;
+
 class Request {
     private array $gets;
     private array $posts;
@@ -38,32 +40,40 @@ class Request {
     }
 
     public function method(): string {
-        return $_SERVER['REQUEST_METHOD'];
+        return $_SERVER['REQUEST_METHOD'] ?? "GET";
     }
 
-    public function file(string $name, int | bool $raw = false) {
-        if (isset($_FILES[$name]) && $_FILES[$name]) {
-            $data = trim($_FILES[$name]);
-            if (!$raw) {
-                $data = htmlspecialchars($data);
+    public function file(string | array $name) {
+        if (is_string($name)) {
+            if (isset($_FILES[$name])) {
+                return $_FILES[$name];
+            } else {
+                return null;
             }
-            return $data;
         } else {
-            return null;
+            $fileArr = [];
+            foreach($name as $file) {
+                $fileArr[$file] = $_FILES[$file] ?? null;
+            }
+            return $fileArr;
         }
     }
 
     public function exists(string $name, bool $noValue = false) {
-        if (isset($_REQUEST[$name])) {
-            if (!$_REQUEST[$name] && $noValue) {
-                return false;
+        if (isset($_REQUEST[$name]) && $_REQUEST[$name] !== null) {
+            $var = $_REQUEST[$name];
+            if(is_string($var)) {
+                $var = trim($var);
+                if ($noValue && $var === "") {
+                    return false;
+                }
             }
             return true;
         }
         return false;
     }
 
-    public function getInput(string $method, string $var_name, int $type = FILTER_DEFAULT, bool $raw = false):string | array | null {
+    public function input(string $method, string $var_name, int $type = FILTER_DEFAULT) : string | array | null {
         $value = null;
         switch (strtolower($method)) {
         case 'cookie':
@@ -93,27 +103,33 @@ class Request {
         break;
         }
 
-        $value = trim($value);
-        if (!$raw) {
-            $value = htmlspecialchars($value);
+        if (is_string($value) && $value !== "") {
+            $value = trim($value);
         }
-        return ($value) ? $value : null;
-    }
-
-    public function getInputRaw(string $method, string $var_name, int $type = FILTER_DEFAULT):string | array | null {
-        return $this->getInput($method, $var_name, $type, true);
+        if ($value === false) {
+            $value = null;
+        }
+        return $value;
     }
 
     public function getHeaders(): array {
-        return headers_list();
+        return getallheaders();
     }
 
-    public function get(array | string $name, int | bool $raw = false) {
+    private function fetch(array | string $name,string $method) {
+        $method = strtolower($method);
+        if ($method === "get") {
+            $DATA = $_GET;
+        } elseif ($method === "post") {
+            $DATA = $_POST;
+        }
         if (is_string($name)) {
-            if (isset($_GET[$name]) && $_GET[$name]) {
-                $data = trim($_GET[$name]);
-                if (!$raw) {
-                    $data = htmlspecialchars($data);
+            if (isset($DATA[$name]) && $DATA[$name] !== null) {
+                if (is_string($DATA[$name])) {
+                    $data = trim($DATA[$name]);
+                }
+                if($data === "") {
+                    return null;
                 }
                 return $data;
             } else {
@@ -122,10 +138,12 @@ class Request {
         } else {
             $resultArr = [];
             foreach($name as $value) {
-                if (isset($_GET[$value]) && $_GET[$value]) {
-                    $data = trim($_GET[$value]);
-                    if (!$raw) {
-                        $data = htmlspecialchars($data);
+                if (isset($DATA[$value]) && $DATA[$value] !== null) {
+                    if (is_string($DATA[$value])) {
+                        $data = trim($DATA[$value]);
+                    }
+                    if($data === "") {
+                        $resultArr[$value] = null;
                     }
                     $resultArr[$value] = $data;
                 } else {
@@ -134,41 +152,15 @@ class Request {
             }
             return count($resultArr) ? $resultArr : null;
         }
+
+
     }
 
-    public function getRaw(string $name) {
-        return $this->get($name, true);
+    public function get(array | string $name) {
+        return $this->fetch($name, "get");
     }
 
-    public function post(string | array $name, int | bool $raw = false) {
-        if (is_string($name)) {
-            if (isset($_POST[$name]) && $_POST[$name]) {
-                $data = trim($_POST[$name]);
-                if (!$raw) {
-                    $data = htmlspecialchars($data);
-                }
-                return $data;
-            } else {
-                return null;
-            }
-        } else {
-            $resultArr = [];
-            foreach($name as $value) {
-                if (isset($_POST[$value]) && $_POST[$value]) {
-                    $data = trim($_POST[$value]);
-                    if (!$raw) {
-                        $data = htmlspecialchars($data);
-                    }
-                    $resultArr[$value] = $data;
-                } else {
-                    $resultArr[$value] = null;
-                }
-            }
-            return count($resultArr) ? $resultArr : null;
-        }
-    }
-
-    public function postRaw(string $name) {
-        return $this->post($name, true);
+    public function post(string | array $name) {
+        return $this->fetch($name, "post");
     }
 }
