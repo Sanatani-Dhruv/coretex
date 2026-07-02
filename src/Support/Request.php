@@ -11,6 +11,7 @@ class Request {
     private array $requests;
     private array $cookies;
     private array $server;
+    public string $currentUrl;
 
     public function __construct() {
         $this->posts = $_POST;
@@ -19,6 +20,7 @@ class Request {
         $this->files = $_FILES;
         $this->cookies = $_COOKIE;
         $this->server = $_SERVER;
+        $this->currentUrl = parse_url($this->input('server', 'REQUEST_URI'), PHP_URL_PATH);
     }
 
     public function allGet() : array {

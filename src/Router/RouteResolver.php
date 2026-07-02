@@ -11,7 +11,7 @@ class RouteResolver {
 
 	}
 
-	public function resolve(string $requestUrl, callable | array | string $handler, array $dynamicVariables = []) {
+	public function resolve(callable | array | string $handler, array $dynamicVariables = []) {
 		if (is_callable($handler)) {
 			// pre($dynamicVariables);
 			if (count($dynamicVariables)) {
@@ -73,7 +73,7 @@ class RouteResolver {
 				http_response_code(500);
 				echo "500 Internal Error";
 			} catch(InternalErrorException $error) {
-				throw new $error;
+				throw $error;
 			}
 		}
 	}
