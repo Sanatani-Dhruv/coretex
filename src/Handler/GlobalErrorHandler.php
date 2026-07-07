@@ -17,6 +17,24 @@ class GlobalErrorHandler {
 		\comp($compName, $parameters, $this->systemCompDir);
 	}
 
+	public static function log_error(Throwable $Exception, string $path = "/storage/error.log") {
+		if (!file_exists(approot() . $path)) {
+			if (!is_dir(approot() . dirname($path))) {
+				mkdir(approot() . dirname($path));
+			}
+			touch(approot(). $path);
+		}
+		$error_log = "[" . date(DATE_RSS) . "] - MESSAGE: {$Exception->getMessage()} | FILE: {$Exception->getFile()} | LINE_NUMBER: {$Exception->getLine()} |\nSTACK_TRACE:\n";
+		$i = 1;
+		foreach($Exception->getTrace() as $trace) {
+			$error_log .= "$i) " . ($trace['file'] ?? $trace['method'] ?? "") . ":  " . ($trace['line'] ?? $trace['class'] ?? "") . "\n";
+			$i++;
+		}
+		$error_log .= "=================\n";
+		unset($i);
+		error_log($error_log, 3, approot() . $path);
+	}
+
 	public function HandleError($Code, $Message, $File = null, $Line = 0, $Context = []) {
 		// echo "Working Error";
 		error_reporting(E_ALL ^ E_DEPRECATED);
@@ -171,21 +189,7 @@ class GlobalErrorHandler {
 				$errLine = $Exception->getLine();
 				$errLinesArray = $this->getErrorFileLines(approot() . "/" . $errFile, $errLine);
 
-				if (!file_exists(approot() . "/storage/error.log")) {
-					if (!is_dir(approot() . "/storage/")) {
-						mkdir(approot() . "/storage/");
-					}
-					touch(approot(). "/storage/error.log");
-				}
-				$error_log = "[" . date(DATE_RSS) . "] - MESSAGE: {$Exception->getMessage()} | FILE: {$Exception->getFile()} | LINE_NUMBER: $errLine |\nSTACK_TRACE:\n";
-				$i = 1;
-				foreach($Exception->getTrace() as $trace) {
-					$error_log .= "$i) {$trace['file']} : {$trace['line']}\n";
-					$i++;
-				}
-				$error_log .= "=================\n";
-				unset($i);
-				error_log($error_log, 3, approot() . "/storage/error.log");
+				self::log_error($Exception);
 
 				$this->comp("error_layout.php", [
 					"errMsg" => $Exception->getMessage(),
