@@ -17,7 +17,7 @@ class GlobalErrorHandler {
 		\comp($compName, $parameters, $this->systemCompDir);
 	}
 
-	public static function log_error(Throwable $Exception, string $path = "/storage/error.log") {
+	public static function log_error(\Exception $Exception, string $path = "/storage/error.log") {
 		if (!file_exists(approot() . $path)) {
 			if (!is_dir(approot() . dirname($path))) {
 				mkdir(approot() . dirname($path));
