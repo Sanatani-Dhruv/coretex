@@ -62,8 +62,7 @@ class RouteResolver {
 					if (!method_exists($object, 'index')) {
 						throw new InternalErrorException("No method provided for '$className', default fallback method 'index' also not found");
 					}
-					$object->{"index"}($passVariables);
-					return;
+					return $object->{"index"}($passVariables);
 				}
 				if (!method_exists($object, $methodName)) {
 					throw new InternalErrorException("Trying to call undefined method '$methodName' for class '$className'");

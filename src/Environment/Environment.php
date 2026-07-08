@@ -12,7 +12,7 @@ class Environment {
 
     $dev_env = ($_ENV["DEV_ENV"] == 'true') ? true : false;
 
-    $errorLevel = E_ALL;
+    $errorLevel = E_ALL ^ E_DEPRECATED;
     if ($dev_env) {
       $errorLevel = E_ALL ^ E_DEPRECATED;
       ini_set('display_errors', '1');

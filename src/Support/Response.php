@@ -62,12 +62,22 @@ class Response {
         return $this;
     }
 
-    public function setPayload(string | array $payload, string | int | array | bool | float $payloadValue = null) : self {
+    public function setPayload(string | array $payload, string | int | array | bool | float $payloadValue = "", callable $handler = null) : self {
         if (is_array($payload)) {
             foreach ($payload as $key => $value){
+                if (!($handler === null)) {
+                    if (!$handler($key, $value)) {
+                        continue;
+                    }
+                }
                 $this->payload[$key] = $value;
             }
         } elseif(is_string($payload) && $payloadValue !== null) {
+            if (!($handler === null)) {
+                if (!$handler($key, $value)) {
+                    return $this;
+                }
+            }
             $this->payload[$payload] = $payloadValue;
         }
         return $this;

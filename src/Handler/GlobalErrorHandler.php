@@ -17,7 +17,7 @@ class GlobalErrorHandler {
 		\comp($compName, $parameters, $this->systemCompDir);
 	}
 
-	public static function log_error(\Exception $Exception, string $path = "/storage/error.log") {
+	public static function log_error($Exception, string $path = "/storage/error.log") {
 		if (!file_exists(approot() . $path)) {
 			if (!is_dir(approot() . dirname($path))) {
 				mkdir(approot() . dirname($path));
@@ -27,17 +27,18 @@ class GlobalErrorHandler {
 		$error_log = "[" . date(DATE_RSS) . "] - MESSAGE: {$Exception->getMessage()} | FILE: {$Exception->getFile()} | LINE_NUMBER: {$Exception->getLine()} |\nSTACK_TRACE:\n";
 		$i = 1;
 		foreach($Exception->getTrace() as $trace) {
-			$error_log .= "$i) " . ($trace['file'] ?? $trace['method'] ?? "") . ":  " . ($trace['line'] ?? $trace['class'] ?? "") . "\n";
+			$filePath = $trace['file'] ?? $trace['class'] ?? "";
+			$line = ($trace['line']) ?? ("::" . $trace['method']) ?? "";
+			$line = ((!$trace['line']) && $trace['method']) ? $line : (":" . $line);
+			$error_log .= "$i) $filePath : $line\n";
 			$i++;
 		}
 		$error_log .= "=================\n";
 		unset($i);
-		error_log($error_log, 3, approot() . $path);
+		return error_log($error_log, 3, approot() . $path);
 	}
 
 	public function HandleError($Code, $Message, $File = null, $Line = 0, $Context = []) {
-		// echo "Working Error";
-		error_reporting(E_ALL ^ E_DEPRECATED);
 		if (isset($_ENV['DEV_ENV']) && $_ENV['DEV_ENV']) {
 			$errFile = (str_contains($File, approot()) ? str_replace(approot() . "/", "", $File) : $File);
 
@@ -89,33 +90,38 @@ class GlobalErrorHandler {
 		$traceBlockArr = array();
 		foreach($Exception->getTrace() as $trace) {
 			$traceContainer = "";
-			$fileContent = fopen($trace["file"], "r");
+			if ($found_array_key = array_key_exists('file', $trace)) {
+				$fileContent = fopen($trace["file"], "r");
+			}
 			$traceContainer .= "<pre class='file_content p-2 overflow-auto hidden'>";
 			$i = 0;
 
-			while ($line = fgets($fileContent)) {
-				$i++;
-				if (!trim($line) !== "") {
-					if (($trace["line"] >= $i - 4 && $trace["line"] < $i+5)) {
-						if ($trace['line'] === $i) {
-							$traceContainer .= "<div class='text-red-500/100'><strong><em>";
-							$traceContainer .= "$i ";
-							$traceContainer .= out($line);
-							$traceContainer .= "</strong></em></div>";
-						} else {
-							$traceContainer .= "<div>";
-							$traceContainer .= "$i ";
-							$traceContainer .= out($line);
-							$traceContainer .= "</div>";
+			if ($found_array_key)
+				while ($line = fgets($fileContent)) {
+					$i++;
+					if (!trim($line) !== "") {
+						if (($trace["line"] >= $i - 4 && $trace["line"] < $i+5)) {
+							if ($trace['line'] === $i) {
+								$traceContainer .= "<div class='text-red-500/100'><strong><em>";
+								$traceContainer .= "$i ";
+								$traceContainer .= out($line);
+								$traceContainer .= "</strong></em></div>";
+							} else {
+								$traceContainer .= "<div>";
+								$traceContainer .= "$i ";
+								$traceContainer .= out($line);
+								$traceContainer .= "</div>";
+							}
 						}
 					}
 				}
-			}
 			$traceContainer .= "</pre>";
 			// print_r($trace);
 			$traceBlockArr[] = $traceContainer;
 			$traceContainer = "";
-			fclose($fileContent);
+			if ($found_array_key) {
+				fclose($fileContent);
+			}
 		}
 		return $traceBlockArr;
 	}
@@ -179,10 +185,10 @@ class GlobalErrorHandler {
 				$errFile = (str_contains($errFile, approot()) ? str_replace(approot() . "/", "", $errFile) : $errFile);
 				$tracePathArr = array_map(
 					function($trace) {
-						return (str_contains($trace["file"], approot()) ?
-							str_replace(approot() . "/", "" , $trace['file'])
+						return (str_contains($trace["file"] ?? "", approot()) ?
+							str_replace(approot() . "/", "" , $trace['file'] ?? "")
 							:
-							$trace["file"]
+							$trace["file"] ?? ""
 						);
 					}, $Exception->getTrace());
 
