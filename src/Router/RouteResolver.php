@@ -68,7 +68,7 @@ class RouteResolver {
 				if (!method_exists($object, $methodName)) {
 					throw new InternalErrorException("Trying to call undefined method '$methodName' for class '$className'");
 				}
-				$object->{$methodName}($passVariables);
+				return $object->{$methodName}($passVariables);
 			} catch (ViewNotFoundException $err) {
 				http_response_code(500);
 				echo "500 Internal Error";
