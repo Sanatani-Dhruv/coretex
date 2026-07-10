@@ -17,7 +17,11 @@ class Route {
 	public function __construct() {
 		// echo "--- Made Router ---<br>";
 		// echo "================<br>";
-		$this->requests = [];
+		$this->requests['GET'];
+		$this->requests['POST'];
+		$this->requests['DELETE'];
+		$this->requests['PATCH'];
+		$this->requests['PUT'];
 		$this->resolver = new RouteResolver();
 		$this->matchFound = false;
 		$this->request = new Request();
@@ -120,8 +124,9 @@ class Route {
 	}
 
 	public function end() {
+		$requestMethod = $this->requests[$_SERVER['REQUEST_METHOD']] ?? $this->requests["GET"] ?? [];
 
-		foreach($this->requests[$_SERVER['REQUEST_METHOD']] as $request => $content) {
+		foreach($requestMethod as $request => $content) {
 			$result = $this->matchRoute($request);
 			if ($result['matched']) {
 				break;
