@@ -17,11 +17,12 @@ class Route {
 	public function __construct() {
 		// echo "--- Made Router ---<br>";
 		// echo "================<br>";
-		$this->requests['GET'];
-		$this->requests['POST'];
-		$this->requests['DELETE'];
-		$this->requests['PATCH'];
-		$this->requests['PUT'];
+		$this->requests = [];
+		$this->requests['GET'] = null;
+		$this->requests['POST'] = null;
+		$this->requests['DELETE'] = null;
+		$this->requests['PATCH'] = null;
+		$this->requests['PUT'] = null;
 		$this->resolver = new RouteResolver();
 		$this->matchFound = false;
 		$this->request = new Request();
