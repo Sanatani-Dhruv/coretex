@@ -9,6 +9,7 @@ use Dhruv125\Coretex\Support\Response;
 
 class Route {
 	private array $requests;
+	private array $globalMiddleware;
 	private bool $matchFound;
 	private RouteResolver $resolver;
 	private Request $request;
@@ -27,6 +28,7 @@ class Route {
 		$this->matchFound = false;
 		$this->request = new Request();
 		$this->currentUrl = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+		$this->globalMiddleware = [];
 	}
 
 	private function matchRoute(string $url): array {
@@ -42,6 +44,7 @@ class Route {
 		if (!str_contains($url, '{')) {
 			if ($this->currentUrl === $url) {
 				$result['matched'] = true;
+				$result['currentRoute'] = $url;
 				return $result;
 			}
 		}
@@ -56,6 +59,7 @@ class Route {
 
 		if (preg_match($requestRegex, $this->currentUrl)) {
 			$result['matched'] = true;
+			$result['currentRoute'] = $url;
 			preg_match_all($requestRegex, $this->currentUrl, $variableValues);
 			array_shift($variableValues);
 
@@ -75,7 +79,7 @@ class Route {
 		foreach($middlewares as $middleware) {
 			$payload[] = $middleware($keyPair);
 		}
-		pre($payload);
+		// pre($payload);
 	}
 
 	public function get(string $url, callable | array | string $handler) {
@@ -84,6 +88,27 @@ class Route {
 			'middlewares' => []
 		];
 		return $this->requests['GET'];
+	}
+
+	public function globalMiddleware(array | callable $handler, array $params = []) {
+		if (is_array($handler)) {
+			[ $className, $methodName ] = $handler;
+			$this->globalMiddleware[] = [
+				'class' => $className,
+				'method' => $methodName ?? "index",
+				'params' => $params ?? [],
+			];
+		} else {
+			$this->globalMiddleware[] = [
+				'handler' => $handler,
+				'params' => $params ?? [],
+			];
+		}
+		return $this->globalMiddleware;
+	}
+
+	public function getGlobalMiddleware(): array {
+		return $this->globalMiddleware;
 	}
 
 	public function middleware(string $method, string $url, callable $handler) {
@@ -144,7 +169,8 @@ class Route {
 			return [
 				'middlewares' => $content['middlewares'],
 				'handler' => $content['handler'],
-				'params' => $result['params']
+				'params' => $result['params'],
+				'currentRoute' => $result['currentRoute'] ?? null,
 			];
 			// $this->resolver->resolve($currentUrl, $handler, $keyPair);
 		}

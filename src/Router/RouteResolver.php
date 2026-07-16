@@ -11,7 +11,7 @@ class RouteResolver {
 
 	}
 
-	public function resolve(callable | array | string $handler, array $dynamicVariables = []) {
+	public function resolve(callable | array | string $handler, string $currentRoute, array $dynamicVariables = []) {
 		if (is_callable($handler)) {
 			// pre($dynamicVariables);
 			if (count($dynamicVariables)) {
