@@ -39,6 +39,7 @@ class GlobalErrorHandler {
 	}
 
 	public function HandleError($Code, $Message, $File = null, $Line = 0, $Context = []) {
+		self::log_error(new \Exception($Message, $Code));
 		if (isset($_ENV['DEV_ENV']) && $_ENV['DEV_ENV']) {
 			$errFile = (str_contains($File, approot()) ? str_replace(approot() . "/", "", $File) : $File);
 
@@ -160,6 +161,7 @@ class GlobalErrorHandler {
 	}
 
 	public function HandleException($Exception) {
+		self::log_error($Exception);
 		if (isset($_ENV['DEV_ENV']) && $_ENV['DEV_ENV']) {
 			http_response_code(500);
 			try {
@@ -195,8 +197,6 @@ class GlobalErrorHandler {
 				$errLine = $Exception->getLine();
 				$errLinesArray = $this->getErrorFileLines(approot() . "/" . $errFile, $errLine);
 
-				self::log_error($Exception);
-
 				$this->comp("error_layout.php", [
 					"errMsg" => $Exception->getMessage(),
 					"errFile" => $errFile,
@@ -214,8 +214,7 @@ class GlobalErrorHandler {
 			} catch (\ErrorException $err) {
 				echo($err);
 			}
-		}
-		else {
+		} else {
 			http_response_code(500);
 			if (file_exists(approot() . "/resources/appviews/no-info-error.php")) {
 				$error_title = "500 Internal Server Error";
