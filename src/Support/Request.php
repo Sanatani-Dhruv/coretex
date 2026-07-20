@@ -13,6 +13,8 @@ class Request {
     private array $server;
     public string $currentUrl;
 
+    private array $attributes;
+
     public function __construct() {
         $this->posts = $_POST;
         $this->gets = $_GET;
@@ -20,6 +22,7 @@ class Request {
         $this->files = $_FILES;
         $this->cookies = $_COOKIE;
         $this->server = $_SERVER;
+        $this->attributes = [];
         $this->currentUrl = parse_url($this->input('server', 'REQUEST_URI'), PHP_URL_PATH);
     }
 
@@ -144,6 +147,24 @@ class Request {
             return trim($string, $character_mask);
         }
         return $string;
+    }
+
+    public function setAttribute(string $attributeName, mixed $attributeValue) : self {
+        $this->attributes[$attributeName] = $attributeValue;
+        return $this;
+    }
+
+    public function hasAttribute(string $attributeName) : bool {
+        return array_key_exists($attributeName, $this->attributes);
+    }
+
+    public function removeAttribute(string $attributeName) : self {
+        unset($this->attributes[$attributeName]);
+        return $this;
+    }
+
+    public function getAttribute(string $attributeName) : mixed {
+        return $this->attributes[$attributeName] ?? null;
     }
 
     public function getHeaders(): array {
