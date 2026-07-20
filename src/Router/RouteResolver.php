@@ -5,13 +5,16 @@ namespace Dhruv125\Coretex\Router;
 use Dhruv125\Coretex\Viewer\View;
 use Dhruv125\Coretex\Exceptions\InternalErrorException;
 
+use Dhruv125\Coretex\Support\Request;
+use Dhruv125\Coretex\Support\Response;
+
 class RouteResolver {
 
 	public function __construct() {
 
 	}
 
-	public function resolve(callable | array | string $handler, string $currentRoute, array $dynamicVariables = []) {
+	public function resolve(callable | array | string $handler, Request $request, Response $response, string $currentRoute, array $dynamicVariables = []) {
 		if (is_callable($handler)) {
 			// pre($dynamicVariables);
 			if (count($dynamicVariables)) {
@@ -52,22 +55,23 @@ class RouteResolver {
 				if (!isset($passVariables)) {
 					$passVariables = [];
 				}
+				// $passVariables = array_merge($passVariables);
 				if (!class_exists($className)) {
 					throw new InternalErrorException("Trying to call Undefined class '$className'");
 				}
 				$object = new $className($dynamicVariables);
 				// pre($dynamicVariables);
 
-				if (!isset($methodName) ) {
+				if (!isset($methodName)) {
 					if (!method_exists($object, 'index')) {
 						throw new InternalErrorException("No method provided for '$className', default fallback method 'index' also not found");
 					}
-					return $object->{"index"}($passVariables);
+					return $object->{"index"}($request, $response, $passVariables);
 				}
 				if (!method_exists($object, $methodName)) {
 					throw new InternalErrorException("Trying to call undefined method '$methodName' for class '$className'");
 				}
-				return $object->{$methodName}($passVariables);
+				return $object->{$methodName}($request, $response, $passVariables);
 			} catch (ViewNotFoundException $err) {
 				http_response_code(500);
 				echo "500 Internal Error";
