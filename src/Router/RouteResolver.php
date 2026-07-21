@@ -14,7 +14,7 @@ class RouteResolver {
 
 	}
 
-	public function resolve(callable | array | string $handler, Request $request, Response $response, string $currentRoute, array $dynamicVariables = []) {
+	public function resolve(callable | array | string $handler, Request $request, Response $response, ) {
 		if (is_callable($handler)) {
 			// pre($dynamicVariables);
 			if (count($dynamicVariables)) {
@@ -33,6 +33,7 @@ class RouteResolver {
 				$handler();
 			}
 		} elseif (is_string($handler)) {
+			$dynamicVariables = $request->getAttribute('dynamicParams') ?? [];
 			View::instantView($handler, $dynamicVariables);
 		} elseif (is_array($handler)) {
 			try {
@@ -59,7 +60,7 @@ class RouteResolver {
 				if (!class_exists($className)) {
 					throw new InternalErrorException("Trying to call Undefined class '$className'");
 				}
-				$object = new $className($dynamicVariables);
+				$object = new $className();
 				// pre($dynamicVariables);
 
 				if (!isset($methodName)) {
