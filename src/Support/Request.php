@@ -24,7 +24,10 @@ class Request {
         $this->server = $_SERVER;
         $this->attributes = [];
 
-        $this->currentUrl = parse_url($this->input('server', 'REQUEST_URI'), PHP_URL_PATH) ?? "/";
+        $this->currentUrl = parse_url($this->input('server', 'REQUEST_URI'), PHP_URL_PATH) ?? "";
+        if ($this->currentUrl === "") {
+            $this->currentUrl = parse_url($this->input('server', "REQUEST_URI"), PHP_URL_HOST) ?? "";
+        }
     }
 
     public function allGet() : array {

@@ -15,20 +15,27 @@ class Route {
 	private Request $request;
 	public string $currentUrl;
 
-	public function __construct() {
+	public function __construct(Request $request, Response $response) {
 		// echo "--- Made Router ---<br>";
 		// echo "================<br>";
+
+		$this->request = $request;
+		$this->response = $response;
+
 		$this->requests = [];
+
 		$this->requests['GET'] = null;
 		$this->requests['POST'] = null;
 		$this->requests['DELETE'] = null;
 		$this->requests['PATCH'] = null;
 		$this->requests['PUT'] = null;
-		$this->resolver = new RouteResolver();
-		$this->matchFound = false;
-		$this->request = new Request();
-		$this->currentUrl = $this->request->currentUrl;
+
 		$this->globalMiddleware = [];
+
+		$this->resolver = new RouteResolver();
+
+		$this->matchFound = false;
+		$this->currentUrl = $request->currentUrl;
 	}
 
 	private function matchRoute(string $url): array {
