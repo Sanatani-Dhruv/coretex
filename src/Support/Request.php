@@ -23,7 +23,8 @@ class Request {
         $this->cookies = $_COOKIE;
         $this->server = $_SERVER;
         $this->attributes = [];
-        $this->currentUrl = parse_url($this->input('server', 'REQUEST_URI'), PHP_URL_PATH);
+
+        $this->currentUrl = parse_url($this->input('server', 'REQUEST_URI'), PHP_URL_PATH) ?? "/";
     }
 
     public function allGet() : array {

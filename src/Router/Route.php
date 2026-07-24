@@ -27,7 +27,7 @@ class Route {
 		$this->resolver = new RouteResolver();
 		$this->matchFound = false;
 		$this->request = new Request();
-		$this->currentUrl = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+		$this->currentUrl = $this->request->currentUrl;
 		$this->globalMiddleware = [];
 	}
 
