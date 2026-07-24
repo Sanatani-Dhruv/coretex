@@ -119,7 +119,7 @@ class Template {
 				$this->scanRes($dirPath . "/" . basename($value));
 			}
 		} elseif(is_file($dirPath) || file_exists($dirPath)) {
-			$filePath = $dirPath;
+			$filePath = str_replace(approot() . "/", '', $dirPath);
 				// echo $filePath. "\n";
 			if (strstr($filePath, ".temp.php")) {
 				$fileName = basename($filePath,".temp.php") . "." . filemtime($filePath) . ".compiled.php";
