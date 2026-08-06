@@ -48,7 +48,6 @@ class RouteResolver {
 					break;
 				case 1:
 					[ $className ] = $handler;
-					// throw new InternalErrorException("Provide method name as string for $className");
 					break;
 				default:
 					throw new InternalErrorException("Very fews arguments provided, minimum 2 are required: (1) Full Classname, (2) Method Name (default method: index)");
