@@ -17,6 +17,7 @@ class RouteResolver {
 	public function resolve(callable | array | string $handler, Request $request, Response $response, ) {
 		if (is_callable($handler)) {
 			// pre($dynamicVariables);
+			$dynamicVariables = $request->getAttribute('dynamicParams') ?? [];
 			if (count($dynamicVariables)) {
 				$reflect = new \ReflectionFunction($handler);
 				$payload = [];
