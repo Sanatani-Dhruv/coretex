@@ -27,10 +27,19 @@ class GlobalErrorHandler {
 		$error_log = "[" . date(DATE_RSS) . "] - MESSAGE: {$Exception->getMessage()} | FILE: {$Exception->getFile()} | LINE_NUMBER: {$Exception->getLine()} |\nSTACK_TRACE:\n";
 		$i = 1;
 		foreach($Exception->getTrace() as $trace) {
-			$filePath = $trace['file'] ?? $trace['class'] ?? "";
-			$line = ($trace['line']) ?? ("::" . $trace['method']) ?? "";
-			$line = ((!$trace['line']) && $trace['method']) ? $line : (":" . $line);
-			$error_log .= "$i) $filePath : $line\n";
+			if (isset($trace['file'])) {
+				$filePath = $trace['file'];
+				$line = $trace['line'];
+				$error_log .= "$i) $filePath : $line\n";
+			} elseif (isset($trace['class'])) {
+				$className = $trace['class'];
+				$methodName = $trace['method'] ?? null;
+				if ($methodName) {
+					$error_log .= "$i) $className\:\:$methodName\n";
+				} else {
+					$error_log .= "$i) $className\n";
+				}
+			}
 			$i++;
 		}
 		$error_log .= "=================\n";

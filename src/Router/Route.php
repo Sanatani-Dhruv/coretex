@@ -2,6 +2,7 @@
 namespace Dhruv125\Coretex\Router;
 
 use Dhruv125\Coretex\Exceptions\PageNotFoundException;
+use Dhruv125\Coretex\Exceptions\InternalErrorException;
 use Dhruv125\Coretex\Router\RouteResolver;
 
 use Dhruv125\Coretex\Support\Request;
@@ -15,27 +16,20 @@ class Route {
 	private Request $request;
 	public string $currentUrl;
 
-	public function __construct(Request $request, Response $response) {
+	public function __construct() {
 		// echo "--- Made Router ---<br>";
 		// echo "================<br>";
-
-		$this->request = $request;
-		$this->response = $response;
-
 		$this->requests = [];
-
 		$this->requests['GET'] = null;
 		$this->requests['POST'] = null;
 		$this->requests['DELETE'] = null;
 		$this->requests['PATCH'] = null;
 		$this->requests['PUT'] = null;
-
-		$this->globalMiddleware = [];
-
 		$this->resolver = new RouteResolver();
-
 		$this->matchFound = false;
-		$this->currentUrl = $request->currentUrl;
+		$this->request = new Request();
+		$this->currentUrl = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+		$this->globalMiddleware = [];
 	}
 
 	private function matchRoute(string $url): array {
@@ -80,15 +74,6 @@ class Route {
 		return $result;
 	}
 
-	private function runMiddleware(string $currentTempUrl, string | array | callable $finalHandler, array $keyPair = []) {
-		$middlewares = $this->requests[$this->request->method()][$currentTempUrl]['middlewares'];
-		$payload = [];
-		foreach($middlewares as $middleware) {
-			$payload[] = $middleware($keyPair);
-		}
-		// pre($payload);
-	}
-
 	public function get(string $url, callable | array | string $handler) {
 		$this->requests['GET'][$url] = [
 			'handler' => $handler,
@@ -118,10 +103,25 @@ class Route {
 		return $this->globalMiddleware;
 	}
 
-	public function middleware(string $method, string $url, callable $handler) {
+	public function middleware(string $method, string $url, array | callable $handler) {
 		$method = strtoupper($method);
-		$this->requests[$method][$url]['middlewares'][] = $handler;
-		// $this->parse_url_temp($url);
+		// $this->requests[$method][$url]['middlewares'][] = [
+		// 	'class' => $className,
+		// 	'method' => $methodName ?? 'index',
+		// ];
+		if (is_array($handler)) {
+			$count = count($handler);
+			if (!$count) {
+				throw new InternalErrorException("No handler class provided for route: '$url', request method: '$method'");
+			} elseif ($count === 1) {
+				$handler[1] = "index";
+			}
+
+			$this->requests[$method][$url]['middlewares'][] = $handler;
+		} elseif (is_callable($handler)) {
+			// pre($this);
+			$this->requests[$method][$url]['middlewares'][] = $handler;
+		}
 	}
 
 	public function post(string $url, callable | array | string $handler) {
