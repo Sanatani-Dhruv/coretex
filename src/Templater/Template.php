@@ -43,7 +43,7 @@ class Template {
 
 		/* PHP Block */
 		$final = str_replace("@php", "<?php", $final);
-		$final = str_replace("@endphp;", "?>", $final);
+		$final = str_replace([ "@endphp;", "@endphp;\n\n", "@endphp;\n" ], "?>", $final);
 
 		/* General Ending Sequences */
 		$final = str_replace(")@@", "));?>", $final);
