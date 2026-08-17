@@ -103,24 +103,52 @@ class Route {
 		return $this->globalMiddleware;
 	}
 
-	public function middleware(string $method, string $url, array | callable $handler) {
+	public function middleware(string $method, string | array $urls, array | callable $handler) {
 		$method = strtoupper($method);
-		// $this->requests[$method][$url]['middlewares'][] = [
+		// $this->requests[$method][$urls]['middlewares'][] = [
 		// 	'class' => $className,
 		// 	'method' => $methodName ?? 'index',
 		// ];
 		if (is_array($handler)) {
 			$count = count($handler);
 			if (!$count) {
-				throw new InternalErrorException("No handler class provided for route: '$url', request method: '$method'");
+				$url = "";
+				if (is_array($urls)) {
+					for($i = 0 ; $i < 3; $i++) {
+						if ($urls[$i] ?? false) {
+							$url .= ", " . $urls[$i];
+						} else break;
+					}
+				}
+				throw new InternalErrorException("No handler class provided for route: '$urls'");
 			} elseif ($count === 1) {
 				$handler[1] = "index";
 			}
 
-			$this->requests[$method][$url]['middlewares'][] = $handler;
+			if (is_string($urls)) {
+				$this->requests[$method][$urls]['middlewares'][] = $handler;
+			} else {
+				if (!count($urls)) {
+					throw new InternalErrorException("No Url Provided for Middleware!");
+				}
+
+				foreach($urls as $url) {
+					$this->requests[$method][$url]['middlewares'][] = $handler;
+				}
+			}
 		} elseif (is_callable($handler)) {
 			// pre($this);
-			$this->requests[$method][$url]['middlewares'][] = $handler;
+			if (is_string($urls)) {
+				$this->requests[$method][$urls]['middlewares'][] = $handler;
+			} else {
+				if (!count($urls)) {
+					throw new InternalErrorException("No Url Provided for Middleware!");
+				}
+
+				foreach($urls as $url) {
+					$this->requests[$method][$url]['middlewares'][] = $handler;
+				}
+			}
 		}
 	}
 
