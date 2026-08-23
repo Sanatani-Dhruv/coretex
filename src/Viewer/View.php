@@ -40,8 +40,7 @@ class View {
 			throw new \ErrorException("views.json not found at " . dirname($compiledViewDetailPath));
 		}
 		$compiledViewDetails = json_decode(file_get_contents($compiledViewDetailPath), true);
-		$compiledViewPath = $compiledViewStorageDir . $compiledViewDetails["resources/views/" . $tempName];
-		pre($compiledViewPath);
+		$compiledViewPath = $compiledViewStorageDir . $compiledViewDetails["/" . $tempName];
 		if (file_exists($compiledViewPath)) {
 			if (count($pairs)) extract($pairs);
 			if (!$givePath) {

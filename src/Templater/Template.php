@@ -23,6 +23,9 @@ class Template {
 			}
 			mkdir($this->viewStoragePath);
 		}
+		if (!is_dir($this->viewResPath)) {
+			mkdir($this->viewResPath);
+		}
 		return;
 	}
 
@@ -96,7 +99,7 @@ class Template {
 		return $final;
 	}
 
-	public function scanRes($dirPath = "") {
+	public function scanRes(string $dirPath = "") {
 		if (!is_dir($this->viewResPath)) {
 			try {
 				$this->makeStorageDirs();
@@ -105,7 +108,7 @@ class Template {
 			}
 		}
 
-		if (!$dirPath) {
+		if ($dirPath === "") {
 			$dirPath = rtrim($this->viewResPath, "/");
 		}
 
@@ -119,20 +122,22 @@ class Template {
 				$this->scanRes($dirPath . "/" . basename($value));
 			}
 		} elseif(is_file($dirPath) || file_exists($dirPath)) {
-			$filePath = str_replace(approot() . "/", '', $dirPath);
+			$filePath = str_replace(approot() . "/resources/views", '', $dirPath);
 			if (strstr($filePath, ".temp.php")) {
-				$fromResPath = str_replace("resources/views" , "", $filePath);
-				echo $fromResPath . "\n";
-				$fileDir = md5($fromResPath);
-				$fileName = $fileDir . "_" . basename($filePath,".temp.php") . "." . filemtime($this->viewResPath . "/" . $filePath) . ".c.php";
-				// $fileName = basename($filePath,".temp.php") . "." . filemtime($filePath) . ".c.php";
+				// echo "From ScanRes: " . $dirPath . "\n";
+				$fromResPath = md5(dirname($filePath));
+
+				// echo $fromResPath . "\n";
+				$fileName = $fromResPath . "_" . basename($filePath,".temp.php") . "." . filemtime($this->viewResPath . "/" . $filePath) . ".c.php";
+				// $fileName = $fromResPath . "_" . basename($path,".temp.php") . "." . filemtime($filePath) . ".c.php";
+				// echo "From ScanRes: ";
 				// echo ($fileName . "\n");
 				$this->filePathArr[$filePath] = $fileName;
 				// file_put_contents($this->viewStoragePath . $fileName, $this->parse($filePath));
 			}
 		}
 		if (count($this->filePathArr)) {
-			// echo "Total Files: " . count($this->filePathArr) . "\n";
+			// echo "ScanRes: Total Files: " . count($this->filePathArr) . "\n";
 			// print_r($this->filePathArr);
 			return $this->filePathArr;
 		}
@@ -169,7 +174,8 @@ class Template {
 
 			if (strstr($path, ".c.php")) {
 				foreach($resArr as $resName => $compiledName) {
-					if (file_exists($resName) && strstr($path, ".c.php") && strstr($path, filemtime($resName))) {
+					// echo "$resName => $compiledName\n";
+					if (file_exists($this->viewResPath . $resName) && strstr($path, ".c.php") && strstr($path, filemtime($this->viewResPath . $resName))) {
 						$compiledViewCount++;
 						// echo "$path => $resName Matched\n";
 						break;
@@ -229,10 +235,11 @@ class Template {
 			}
 
 			if (!is_dir($filePath) && strstr($path, ".temp.php")) {
-				$fromResPath = str_replace(approot() . "/resources/views" , "", $basepath);
-				$fileDir = md5($fromResPath);
-				$fileName = $fileDir . "_" . basename($path,".temp.php") . "." . filemtime($filePath) . ".c.php";
-				echo($filePath . "\n");
+				$fromResPath = str_replace(approot() . "/resources/views" , "", $filePath);
+				$fromResPath = md5(dirname($fromResPath));
+				// $fileDir = md5($fromResPath);
+				$fileName = $fromResPath . "_" . basename($path,".temp.php") . "." . filemtime($filePath) . ".c.php";
+				// echo ($fileName . "\n");
 				// echo "Res File: $filePath\n";
 				// echo "Compiled File: $this->viewStoragePath$fileName\n";
 				file_put_contents($this->viewStoragePath . $fileName, $this->parse($filePath));
