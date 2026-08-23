@@ -122,7 +122,9 @@ class Template {
 			$filePath = str_replace(approot() . "/", '', $dirPath);
 				// echo $filePath. "\n";
 			if (strstr($filePath, ".temp.php")) {
-				$fileName = basename($filePath,".temp.php") . "." . filemtime($filePath) . ".compiled.php";
+				$fileDir = md5(str_replace(approot() . "/resources/views" , "", $filePath));
+				$fileName = $fileDir . "_" . basename($filePath,".temp.php") . "." . filemtime($filePath) . ".c.php";
+				// $fileName = basename($filePath,".temp.php") . "." . filemtime($filePath) . ".c.php";
 				$this->filePathArr[$filePath] = $fileName;
 				// file_put_contents($this->viewStoragePath . $fileName, $this->parse($filePath));
 			}
@@ -163,9 +165,9 @@ class Template {
 				continue;
 			}
 
-			if (strstr($path, "compiled.php")) {
+			if (strstr($path, ".c.php")) {
 				foreach($resArr as $resName => $compiledName) {
-					if (file_exists($resName) && strstr($path, "compiled.php") && strstr($path, filemtime($resName))) {
+					if (file_exists($resName) && strstr($path, ".c.php") && strstr($path, filemtime($resName))) {
 						$compiledViewCount++;
 						// echo "$path => $resName Matched\n";
 						break;
@@ -224,7 +226,9 @@ class Template {
 			}
 
 			if (!is_dir($filePath) && strstr($path, ".temp.php")) {
-				$fileName = basename($path,".temp.php") . "." . filemtime($filePath) . ".compiled.php";
+				$fileDir = md5(str_replace(approot() . "/resources/views" , "", $basepath));
+				$fileName = $fileDir . "_" . basename($path,".temp.php") . "." . filemtime($filePath) . ".c.php";
+				echo($fileName);
 				// echo "Res File: $filePath\n";
 				// echo "Compiled File: $this->viewStoragePath$fileName\n";
 				file_put_contents($this->viewStoragePath . $fileName, $this->parse($filePath));
