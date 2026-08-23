@@ -41,6 +41,7 @@ class View {
 		}
 		$compiledViewDetails = json_decode(file_get_contents($compiledViewDetailPath), true);
 		$compiledViewPath = $compiledViewStorageDir . $compiledViewDetails["resources/views/" . $tempName];
+		pre($compiledViewPath);
 		if (file_exists($compiledViewPath)) {
 			if (count($pairs)) extract($pairs);
 			if (!$givePath) {

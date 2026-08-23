@@ -120,11 +120,13 @@ class Template {
 			}
 		} elseif(is_file($dirPath) || file_exists($dirPath)) {
 			$filePath = str_replace(approot() . "/", '', $dirPath);
-				// echo $filePath. "\n";
 			if (strstr($filePath, ".temp.php")) {
-				$fileDir = md5(str_replace(approot() . "/resources/views" , "", $filePath));
-				$fileName = $fileDir . "_" . basename($filePath,".temp.php") . "." . filemtime($filePath) . ".c.php";
+				$fromResPath = str_replace("resources/views" , "", $filePath);
+				echo $fromResPath . "\n";
+				$fileDir = md5($fromResPath);
+				$fileName = $fileDir . "_" . basename($filePath,".temp.php") . "." . filemtime($this->viewResPath . "/" . $filePath) . ".c.php";
 				// $fileName = basename($filePath,".temp.php") . "." . filemtime($filePath) . ".c.php";
+				// echo ($fileName . "\n");
 				$this->filePathArr[$filePath] = $fileName;
 				// file_put_contents($this->viewStoragePath . $fileName, $this->parse($filePath));
 			}
@@ -211,6 +213,7 @@ class Template {
 			$basepath = $resDirName;
 			$arr = scandir($resDirName);
 		}
+		// echo "Compiled:\n";
 		foreach($arr as $path) {
 			if ($path === "." || $path === "..") {
 				continue;
@@ -226,9 +229,10 @@ class Template {
 			}
 
 			if (!is_dir($filePath) && strstr($path, ".temp.php")) {
-				$fileDir = md5(str_replace(approot() . "/resources/views" , "", $basepath));
+				$fromResPath = str_replace(approot() . "/resources/views" , "", $basepath);
+				$fileDir = md5($fromResPath);
 				$fileName = $fileDir . "_" . basename($path,".temp.php") . "." . filemtime($filePath) . ".c.php";
-				echo($fileName);
+				echo($filePath . "\n");
 				// echo "Res File: $filePath\n";
 				// echo "Compiled File: $this->viewStoragePath$fileName\n";
 				file_put_contents($this->viewStoragePath . $fileName, $this->parse($filePath));
