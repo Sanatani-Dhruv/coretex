@@ -73,7 +73,7 @@ class GlobalErrorHandler {
 		// Handle error here.
 	}
 	private function getTempFileName(string $compiledFile): string {
-		if (str_contains($compiledFile,"compiled.php")) {
+		if (str_contains($compiledFile,".c.php")) {
 			$errFile = "";
 			$compiledFile = basename($compiledFile);
 			if (file_exists(approot() . "/storage/views.json")) {
@@ -86,6 +86,7 @@ class GlobalErrorHandler {
 				if ($errFile === "") {
 					return $compiledFile;
 				} else {
+					$errFile = "resources/views" . $errFile;
 					return $errFile;
 				}
 			} else {
