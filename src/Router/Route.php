@@ -198,7 +198,7 @@ class Route {
 			$routeArray = $this->requests[$method] ?? [];
 
 			foreach($routeArray as $route => $handler) {
-				$routes[] = $route;
+				$routes[$method][] = $route;
 			}
 		}
 
