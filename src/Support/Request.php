@@ -241,4 +241,23 @@ class Request {
     public function post(string | array $name) : mixed {
         return $this->fetch($name, 'post');
     }
+
+	public function inRoutes(string $route, string $passedMethod) : bool {
+		$routesArray = $this->getAttribute('routesArray');
+		$passedMethod = strtoupper($passedMethod);
+
+		if ($routesArray === null) {
+			throw new InternalErrorException("'routesArray' attribute is not set from which route can be determined");
+		}
+
+		foreach($routesArray as $method => $routes) {
+			if ($method !== $passedMethod) continue;
+
+			if (in_array($route, $routes)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
