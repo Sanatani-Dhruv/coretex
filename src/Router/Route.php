@@ -184,6 +184,27 @@ class Route {
 		return $this->requests['PATCH'];
 	}
 
+	public function getAllRoutes(): array {
+		$routes = [];
+		$methods = [
+			'GET',
+			'POST',
+			'PATCH',
+			'PUT',
+			'DELETE',
+		];
+
+		foreach($methods as $method) {
+			$routeArray = $this->requests[$method] ?? [];
+
+			foreach($routeArray as $route => $handler) {
+				$routes[] = $route;
+			}
+		}
+
+		return $routes;
+	}
+
 	public function end() {
 		$requestMethod = $this->requests[$_SERVER['REQUEST_METHOD']] ?? $this->requests["GET"] ?? [];
 
@@ -193,6 +214,8 @@ class Route {
 				break;
 			}
 		}
+
+		$routes = $this->getAllRoutes();
 
 		if ($result['matched']) {
 			// echo "Matched Url: $this->currentUrl<br>";
@@ -206,6 +229,7 @@ class Route {
 				'handler' => $content['handler'],
 				'params' => $result['params'],
 				'currentRoute' => $result['currentRoute'] ?? null,
+				'routesArray' => $routes ?? [],
 			];
 			// $this->resolver->resolve($currentUrl, $handler, $keyPair);
 		}
