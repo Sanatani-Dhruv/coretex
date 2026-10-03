@@ -15,6 +15,7 @@ class RouteResolver {
 	}
 
 	public function resolve(callable | array | string $handler, Request $request, Response $response, ) {
+		$dynamicVariables = $request->getAttribute('dynamicParams') ?? [];
 		if (is_callable($handler)) {
 			// pre($dynamicVariables);
 			if (count($dynamicVariables)) {
@@ -33,7 +34,6 @@ class RouteResolver {
 				$handler();
 			}
 		} elseif (is_string($handler)) {
-			$dynamicVariables = $request->getAttribute('dynamicParams') ?? [];
 			View::instantView($handler, $dynamicVariables);
 		} elseif (is_array($handler)) {
 			try {
